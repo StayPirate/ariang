@@ -1,0 +1,7 @@
+:80 {
+  root /usr/local/www
+  timeouts none
+  gzip
+  log stdout
+  errors stdout
+}

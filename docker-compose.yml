@@ -1,0 +1,51 @@
+version: "3.7"
+services:
+
+  aria2:
+    build: 
+      context: ./aria2
+      args:
+        - GUID=${GUID}
+        - ARIA2_USER=${ARIA2_USER}
+    image: alpine-aria2:local
+    container_name: Aria2
+    volumes:
+      - ./.aria2-session:/aria2/.aria2-session
+      - download:/aria2/Downloads
+    networks:
+      background_vlan:
+        aliases:
+          - aria2
+        ipv4_address: 172.16.60.5
+    restart: always
+
+  ariang:
+    build: ./ariang
+    image: alpine-ariang:local
+    container_name: AriaNG
+    networks:
+      background_vlan:
+        aliases:
+          - ariang
+        ipv4_address: 172.16.60.4
+    restart: always
+    depends_on:
+      - aria2
+
+volumes:
+   download:
+     driver: local
+     driver_opts:
+       type: cifs
+       device: ${SHARE_PATH}
+       o: username=${SHARE_USER},password=${SHARE_PASS},gid=${GUID},file_mode=0774,dir_mode=0774
+
+networks:
+  background_vlan:
+    name: background_vlan
+    driver: macvlan
+    driver_opts:
+      parent: enp1s0.60
+    ipam:
+      config:
+        - subnet: 172.16.60.0/24
